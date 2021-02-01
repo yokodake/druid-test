@@ -8,13 +8,13 @@ pub struct BorderStyle {
     pub color: KeyOrValue<Color>,
 }
 
-pub struct FooterView<T> {
+pub struct Footer<T> {
     body: WidgetPod<T, Box<dyn Widget<T>>>,
     fill_body: bool,
     footer: WidgetPod<T, Box<dyn Widget<T>>>,
     border: Option<BorderStyle>,
 }
-impl<T: Data> FooterView<T> {
+impl<T: Data> Footer<T> {
     pub fn new(body: impl Widget<T> + 'static, footer: impl Widget<T> + 'static) -> Self {
         Self {
             body: WidgetPod::new(body).boxed(),
@@ -49,7 +49,7 @@ impl<T: Data> FooterView<T> {
         self
     }
 }
-impl<T: Data> Widget<T> for FooterView<T> {
+impl<T: Data> Widget<T> for Footer<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
         self.body.event(ctx, event, data, env);
         self.footer.event(ctx, event, data, env);
@@ -71,7 +71,7 @@ impl<T: Data> Widget<T> for FooterView<T> {
 
         // body layout
         let bbc = if !self.fill_body {
-            bc.loosen().shrink((0.0, fsize.height + border_width))
+            bc.shrink((0.0, fsize.height + border_width)).loosen()
         } else {
             bc.shrink((0., fsize.height + border_width))
         };
@@ -92,20 +92,17 @@ impl<T: Data> Widget<T> for FooterView<T> {
         let my_bounds = druid::Rect::ZERO.with_size(my_size);
         let my_insets = child_paint_rect - my_bounds;
         ctx.set_paint_insets(my_insets);
-        print!("{} ", my_size);
         my_size
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
         if let Some(border) = &self.border {
-            let Size { width, height } = ctx.size();
-            let height = height - self.footer.layout_rect().size().height;
             let border_width = border.width.resolve(env);
+            let Size { width, height } = self.footer.layout_rect().size();
+            let height = ctx.size().height - height - border_width;
             let line = druid::kurbo::Line::new(Point::new(0., height), Point::new(width, height));
             ctx.stroke(line, &border.color.resolve(env), border_width);
         }
-
-        println!("=> {}", ctx.size());
 
         self.body.paint(ctx, data, env);
         self.footer.paint(ctx, data, env);

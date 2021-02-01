@@ -6,13 +6,17 @@ use druid::{
 use druid::widget::{Container, Flex, Label, TextBox};
 
 mod footer;
-use footer::FooterView;
+use footer::Footer;
+mod tripane;
 
 fn build_ui() -> impl Widget<()> {
     Container::new(
-        FooterView::new(Label::new("body"), Label::new("footer"))
-            .fill_body(true)
-            .border(druid::Color::RED, 1.),
+        Footer::new(
+            Label::new("body"),
+            Container::new(Label::new("footer")).background(druid::Color::BLACK),
+        )
+        .fill_body(true)
+        .border(druid::Color::RED, 1.),
     )
 }
 
@@ -31,21 +35,17 @@ struct QExist {}
 impl<T: Data> AppDelegate<T> for QExist {
     fn event(
         &mut self,
-        ctx: &mut druid::DelegateCtx,
-        window_id: druid::WindowId,
+        _ctx: &mut druid::DelegateCtx,
+        _window_id: druid::WindowId,
         event: Event,
-        data: &mut T,
-        env: &druid::Env,
+        _data: &mut T,
+        _env: &druid::Env,
     ) -> Option<Event> {
         match &event {
             Event::KeyUp(k) => {
                 println!("{}", k.code);
                 if k.code == Code::KeyQ {
-                    Some(Event::Command(Command::new(
-                        druid::commands::CLOSE_ALL_WINDOWS,
-                        (),
-                        Target::Auto,
-                    )))
+                    std::process::exit(1)
                 } else {
                     Some(event)
                 }
@@ -56,30 +56,30 @@ impl<T: Data> AppDelegate<T> for QExist {
 
     fn command(
         &mut self,
-        ctx: &mut druid::DelegateCtx,
-        target: druid::Target,
-        cmd: &druid::Command,
-        data: &mut T,
-        env: &druid::Env,
+        _ctx: &mut druid::DelegateCtx,
+        _target: druid::Target,
+        _cmd: &druid::Command,
+        _data: &mut T,
+        _env: &druid::Env,
     ) -> druid::Handled {
         druid::Handled::No
     }
 
     fn window_added(
         &mut self,
-        id: druid::WindowId,
-        data: &mut T,
-        env: &druid::Env,
-        ctx: &mut druid::DelegateCtx,
+        _id: druid::WindowId,
+        _data: &mut T,
+        _env: &druid::Env,
+        _ctx: &mut druid::DelegateCtx,
     ) {
     }
 
     fn window_removed(
         &mut self,
-        id: druid::WindowId,
-        data: &mut T,
-        env: &druid::Env,
-        ctx: &mut druid::DelegateCtx,
+        _id: druid::WindowId,
+        _data: &mut T,
+        _env: &druid::Env,
+        _ctx: &mut druid::DelegateCtx,
     ) {
     }
 }
