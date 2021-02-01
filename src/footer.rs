@@ -13,7 +13,6 @@ pub struct FooterView<T> {
     fill_body: bool,
     footer: WidgetPod<T, Box<dyn Widget<T>>>,
     border: Option<BorderStyle>,
-    footer_size: Option<Size>,
 }
 impl<T: Data> FooterView<T> {
     pub fn new(body: impl Widget<T> + 'static, footer: impl Widget<T> + 'static) -> Self {
@@ -22,7 +21,6 @@ impl<T: Data> FooterView<T> {
             fill_body: false,
             footer: WidgetPod::new(footer).boxed(),
             border: None,
-            footer_size: None,
         }
     }
     pub fn set_fill_body(&mut self, fill: bool) {
@@ -60,7 +58,7 @@ impl<T: Data> Widget<T> for FooterView<T> {
         self.body.lifecycle(ctx, event, data, env);
         self.footer.lifecycle(ctx, event, data, env);
     }
-    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &T, data: &T, env: &Env) {
+    fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &T, data: &T, env: &Env) {
         self.body.update(ctx, data, env);
         self.footer.update(ctx, data, env);
     }
@@ -70,7 +68,6 @@ impl<T: Data> Widget<T> for FooterView<T> {
         let border_width = self.border.as_ref().map_or(0., |x| x.width.resolve(env));
         let fbc = bc.loosen();
         let fsize = self.footer.layout(ctx, &fbc, data, env);
-        self.footer_size = Some(fsize);
 
         // body layout
         let bbc = if !self.fill_body {
@@ -100,16 +97,13 @@ impl<T: Data> Widget<T> for FooterView<T> {
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
-        if let Some(fsize) = &self.footer_size {
-            if let Some(border) = &self.border {
-                let Size { width, height } = ctx.size();
-                let height = height - fsize.height;
-                let border_width = border.width.resolve(env);
-                let line =
-                    druid::kurbo::Line::new(Point::new(0., height), Point::new(width, height));
-                ctx.stroke(line, &border.color.resolve(env), border_width);
-            }
-        };
+        if let Some(border) = &self.border {
+            let Size { width, height } = ctx.size();
+            let height = height - self.footer.layout_rect().size().height;
+            let border_width = border.width.resolve(env);
+            let line = druid::kurbo::Line::new(Point::new(0., height), Point::new(width, height));
+            ctx.stroke(line, &border.color.resolve(env), border_width);
+        }
 
         println!("=> {}", ctx.size());
 
