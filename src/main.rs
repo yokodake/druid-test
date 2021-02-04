@@ -1,9 +1,9 @@
 use druid::{
-    widget::LineBreaking, AppDelegate, AppLauncher, Code, Command, Data, Event, LocalizedString,
-    PlatformError, Size, Target, Widget, WindowDesc,
+    AppDelegate, AppLauncher, Code, Data, Event, 
+    PlatformError, Size, Widget, WindowDesc,
 };
 
-use druid::widget::{Container, Flex, Label, Split, TextBox};
+use druid::widget::{Container, Flex, Label, Split};
 
 mod footer;
 use footer::Footer;
@@ -38,12 +38,10 @@ impl<T> OptionExt<T> for Option<T> {
     }
 }
 fn main() -> Result<(), PlatformError> {
-    println!("{}", unsafe { Some("hello").unwrap_unchecked() });
-
     AppLauncher::with_window 
         ( WindowDesc::new(build_ui)
             .title("test")
-            .with_min_size(Size::new(300., 300.)),
+            .with_min_size(Size::new(300., 300.))
         )
         .delegate(QExist {})
         .launch(())
@@ -87,7 +85,7 @@ impl<T: Data> AppDelegate<T> for QExist {
                     , _data: &mut T
                     , _env: &druid::Env
                     , _ctx: &mut druid::DelegateCtx
-                    ) { }
+                    ) {}
 
     fn window_removed ( &mut self
                       , _id: druid::WindowId
