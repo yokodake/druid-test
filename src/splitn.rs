@@ -1,6 +1,6 @@
 use core::f64;
 use std::convert::TryInto;
-use ratio::Rational;
+use super::Rational;
 // TODO: make panes resizeable.
 use druid::{Widget, WidgetPod};
 use druid::widget::Axis;
@@ -23,7 +23,7 @@ impl<T> SplitN<T> {
     let s = children.len();
     Self { split_axis
          , children: children.into_iter().map(|w| WidgetPod::new(w).boxed()).collect()
-         , split_points_chosen: Self::split_evenly(s-1, Rational::ZERO)
+         , split_points_chosen: Self::split_evenly(s, Rational::ZERO)
          , min_sizes: vec![0.; s] 
          , bar_size: 5.
          , solid: true
@@ -43,8 +43,8 @@ impl<T> SplitN<T> {
     // either split evenly the rest / ignore the excess
     // or forbid it
     // assert_eq!(split_points.len(), self.children.len() - 1, "types could've :^) ");
-    let len = self.children.len() - 1;
-    if split_points.len() >= len {
+    let len = self.children.len();
+    if split_points.len() >= len - 1 {
       split_points.truncate(len);
       assert!(split_points.iter().sum::<Rational>() <= Rational::ONE);
     } else {
@@ -57,15 +57,52 @@ impl<T> SplitN<T> {
   }
 
   fn split_evenly(len: usize, offset: Rational) -> Vec<Rational> {
-    let inc : Rational = (Rational::ONE - offset) / len.try_into().unwrap();
-    std::iter::successors( Some((1, inc)) 
+    use std::convert::TryFrom;
+
+    if len == 1 {
+      return vec![];
+    }
+
+    let inc : Rational = (Rational::ONE - offset) / Rational::try_from(len).unwrap();
+    std::iter::successors( Some((1, offset + inc)) 
                          , |(n, x)| {
-        if n > &len {
-          return None;
+        if *n < (len - 1) {
+          Some((n+1, x + inc))
+        } else {
+          None
         }
-        let x1 = x + inc;
-        if x1 < Rational::ONE { Some((n+1, x1)) } else { None }
       }).map(DoubleExt::snd).collect()
+  }
+}
+
+#[cfg(test)]
+mod test_splitn {
+  use super::SplitN;
+  use super::Rational;
+  #[test]
+  fn test_split_evenly() {
+    assert_eq!( SplitN::<()>::split_evenly(1, Rational::ZERO)
+              , vec![]
+              );
+    assert_eq!( SplitN::<()>::split_evenly(2, Rational::ZERO)
+              , vec![ Rational::new(1, 2)]
+              );
+    assert_eq!( SplitN::<()>::split_evenly(3, Rational::ZERO)
+              , vec![ Rational::new(1, 3)
+                    , Rational::new(2, 3)
+                    ]
+              );
+    assert_eq!( SplitN::<()>::split_evenly(4, Rational::new(1, 2))
+              , vec![ Rational::new(5, 8)
+                    , Rational::new(6, 8)
+                    , Rational::new(7, 8)
+                    ]
+              );
+    assert_eq!( SplitN::<()>::split_evenly(3, Rational::new(2, 3))
+              , vec![ Rational::new(7, 9)
+                    , Rational::new(8, 9)
+                    ]
+              );
   }
 }
 

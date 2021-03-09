@@ -5,9 +5,7 @@ use druid::{
 
 use druid::widget::{Container, Flex, Label, Split};
 
-mod footer;
-use footer::Footer;
-mod splitn;
+use widget::Footer;
 
 fn build_ui() -> impl Widget<()> {
     Container::new (

@@ -14,5 +14,5 @@ name = "druid-test"
 path = "src/main.rs"
 
 [lib]
-name = "ratio"
-path = "src/ratio.rs"
+name = "widget"
+path = "src/lib.rs"

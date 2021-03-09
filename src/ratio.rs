@@ -11,12 +11,8 @@ pub struct Ratio<A> { num: A
 pub type Rational = Ratio<isize>;
 
 impl<A> Ratio<A> {
-pub const fn new(num: A, den: A) -> Self {
-    Ratio{num, den}
-}
-
 pub const fn as_ref(&self) -> Ratio<&A> {
-    Ratio::new(&self.den, &self.num)
+    Ratio {num: &self.num, den: &self.den}
 }
 pub fn numerator(self) -> A {
     self.num
@@ -27,10 +23,28 @@ pub fn denominator(self) -> A {
 }
 
 impl Rational {
-    pub const INFINITY : Rational = Self::new(1, 0);
-    pub const NAN : Rational = Self::new(0, 0);
-    pub const ZERO : Rational = Self::new(0, 1);
-    pub const ONE : Rational = Self::new(1, 1);
+    pub const INFINITY : Rational = Self {num: 1, den: 0};
+    pub const NAN  : Rational = Self {num: 0, den: 0};
+    pub const ZERO : Rational = Self {num: 0, den: 1};
+    pub const ONE  : Rational = Self {num: 1, den: 1};
+
+    #[inline]
+    pub fn new(num: isize, den: isize) -> Self {
+        if den.is_negative() {
+            Self::reduce(num.neg(), den.abs())
+        } else {
+            Self::reduce(num, den)
+        }
+    }
+
+    /// if negative => only numerator is neg
+    pub fn sign(&self) -> Self {
+        if self.den.is_negative() {
+            Rational::new(self.num.neg(), self.den.neg())
+        } else {
+            *self
+        }
+    }
 
     pub fn gcd(rhs: isize, lhs: isize) -> isize {
         let mut r = rhs;
@@ -46,7 +60,7 @@ impl Rational {
     #[inline]
     pub fn reduce(n: isize, d: isize) -> Self {
         let x = Self::gcd(n , d);
-        Rational::new(n / x, d / x)
+        Rational {num: n / x, den: d / x}
     }
 }
 
@@ -67,14 +81,14 @@ impl Add<Rational> for Rational {
     type Output = Rational;
     #[inline]
     fn add(self, other: Rational) -> Rational {
-        Self::reduce(self.num * other.den + other.num * self.num, self.den*other.den)
+        Self::reduce(self.num * other.den + other.num * self.den, self.den*other.den)
     }
 }
 impl Sub<Rational> for Rational {
     type Output = Rational;
     #[inline]
     fn sub(self, other: Rational) -> Rational {
-        Self::reduce(self.num * other.den - other.num * self.num, self.den*other.den)
+        Self::reduce(self.num * other.den - other.num * self.den, self.den*other.den)
     }
 }
 impl Mul<Rational> for Rational {
@@ -88,7 +102,7 @@ impl Div<Rational> for Rational {
     type Output = Rational;
     #[inline]
     fn div(self, other: Rational) -> Rational {
-        Self::reduce(self.num * other.den, other.num * self.den)
+        Rational::reduce(self.num * other.den, self.den * other.num)
     }
 }
 impl Neg for Rational {
@@ -114,20 +128,23 @@ impl TryFrom<u64> for Rational {
 }
 
 impl std::iter::Sum<Rational> for Rational {
+    #[inline]
     fn sum<I: Iterator<Item = Rational>>(iter: I) -> Self {
         iter.fold(Rational::ZERO, Add::add)
     }
 }
 impl<'a> std::iter::Sum<&'a Rational> for Rational {
+    #[inline]
     fn sum<I: Iterator<Item = &'a Rational>>(iter: I) -> Self {
         iter.fold(Rational::ZERO, Add::add)
     }
 }
 
+#[cfg(test)]
 mod test_rational {
+    use super::Rational;
     #[test]
     fn test_gcd() {
-        use super::Rational;
         assert_eq!(Rational::gcd(10, 2) , 2);
         assert_eq!(Rational::gcd(10, 3) , 1);
         assert_eq!(Rational::gcd(0 , 3) , 3);
@@ -137,6 +154,59 @@ mod test_rational {
         assert_eq!(Rational::gcd(-6, 3) , 3);
         assert_eq!(Rational::gcd(-4, -2), 2);
     } 
+    #[test]
+    fn test_add() {
+        assert_eq!(Rational::ZERO + Rational::ZERO, 0.into());
+        assert_eq!(Rational::ONE + Rational::ZERO, 1.into());
+        assert_eq!(Rational::ZERO + Rational::ONE, 1.into());
+        assert_eq!(Rational::ONE + Rational::ONE, 2.into());
+        assert_eq!(Rational::new(1, 2) + Rational::new(7, 14), Rational::ONE);
+        assert_eq!(Rational::new(1, 3) + Rational::new(2, 6), Rational::new(2, 3));
+        assert_eq!(Rational::new(3, 14) + Rational::new(23, 25), Rational::new(397, 350));
+        assert_eq!(Rational::new(859, 82) + Rational::new(10, 12), Rational::new(1391, 123));
+        assert_eq!(Rational::new(-1,2) + Rational::new(7, 14), Rational::ZERO);
+        assert_eq!((Rational::new(1, 3) + Rational::new(4, -6)).sign(), Rational::new(-1, 3));
+    }
+    #[test]
+    fn test_mul() {
+        assert_eq!(Rational::ZERO * Rational::ZERO, 0.into());
+        assert_eq!(Rational::ONE * Rational::ZERO, 0.into());
+        assert_eq!(Rational::ZERO * Rational::ONE, 0.into());
+        assert_eq!(Rational::ONE * Rational::ONE, 1.into());
+        assert_eq!(Rational::new(1, 2) * Rational::new(7, 14), Rational::new(1, 4));
+        assert_eq!(Rational::new(1, 3) * Rational::new(2, 6), Rational::new(1, 9));
+        assert_eq!(Rational::new(3, 14) * Rational::new(23, 25), Rational::new(69, 350));
+        assert_eq!(Rational::new(859, 82) * Rational::new(10, 12), Rational::new(4295, 492));
+        assert_eq!((Rational::new(-1,2) * Rational::new(7, 14)).sign(), Rational::new(-1, 4));
+        assert_eq!((Rational::new(1, 3) * Rational::new(4, -6)).sign(), Rational::new(-2, 9));
+    }
+    #[test]
+    fn test_sub() {
+        assert_eq!(Rational::ZERO - Rational::ZERO, 0.into());
+        assert_eq!(Rational::ONE - Rational::ZERO, 1.into());
+        assert_eq!(Rational::ZERO - Rational::ONE, (-1).into());
+        assert_eq!(Rational::ONE - Rational::ONE, 0.into());
+        assert_eq!(Rational::ONE - Rational::new(1, 2), Rational::new(1, 2));
+        assert_eq!(Rational::new(1, 3) - Rational::new(2, 6), Rational::ZERO);
+        assert_eq!(Rational::new(3, 14) - Rational::new(23, 25), Rational::new(-247, 350));
+        assert_eq!(Rational::new(859, 82) - Rational::new(10, 12), Rational::new(1186, 123));
+        assert_eq!((Rational::new(-1,2) - Rational::new(7, 14)).sign(), (-1).into());
+        assert_eq!((Rational::new(1, 3) - Rational::new(2, -6)).sign(), Rational::new(2, 3));
+    }
+    #[test]
+    fn test_div() {
+        // assert_eq!(Rational::ZERO / Rational::ZERO, Rational::NAN);
+        assert_eq!(Rational::ZERO / Rational::ONE, 0.into());
+        assert_eq!(Rational::ONE / Rational::ONE, 1.into());
+        assert_eq!(Rational::ONE / Rational::new(1, 2), 2.into());
+        assert_eq!(Rational::ONE / Rational::new(2, 1), Rational::new(1, 2));
+        assert_eq!(Rational::new(1, 2) / Rational::new(14, 7), Rational::new(1, 4));
+        assert_eq!(Rational::new(1, 3) / Rational::new(2, 6), Rational::new(1, 1));
+        assert_eq!(Rational::new(3, 14) / Rational::new(23, 25), Rational::new(75, 322));
+        assert_eq!(Rational::new(859, 82) * Rational::new(10, 12), Rational::new(4295, 492));
+        assert_eq!((Rational::new(-1,2) * Rational::new(7, 14)).sign(), Rational::new(-1, 4));
+        assert_eq!((Rational::new(1, 3) * Rational::new(4, -6)).sign(), Rational::new(-2, 9));
+    }
 }
 
 // see rust's std src/core/internal_macros.rs 
@@ -215,6 +285,6 @@ macro_rules! forward_ref_op_assign {
 forward_ref_binop! { impl Add, add for Rational, Rational }
 forward_ref_binop! { impl Sub, sub for Rational, Rational }
 forward_ref_binop! { impl Mul, mul for Rational, Rational }
-// forward_ref_binop! { impl Div, sub for Rational, Rational }
+forward_ref_binop! { impl Div, div for Rational, Rational }
 forward_ref_unop!  { impl Neg, neg for Rational }
 from_integers_rational! { u32 isize i32 }
