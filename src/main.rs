@@ -37,6 +37,7 @@ impl<T> OptionExt<T> for Option<T> {
 }
 fn main() -> Result<(), PlatformError> {
     AppLauncher::with_window 
+        ( WindowDesc::new(build_ui())
         ( WindowDesc::new(build_ui)
             .title("test")
             .with_min_size(Size::new(300., 300.))
