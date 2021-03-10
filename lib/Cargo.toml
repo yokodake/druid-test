@@ -1,0 +1,12 @@
+[package]
+name = "yukari-lib"
+version = "0.1.0"
+license = "BSD-3"
+authors = ["Yokodake <yokodake@cinnabar.fr>"]
+description = "library for for yukari"
+repository = "https://github.com/yokodake/yukari"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

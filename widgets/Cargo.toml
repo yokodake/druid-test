@@ -1,25 +1,17 @@
 [package]
-name = "yukari"
+name = "yukari-widgets"
 version = "0.1.0"
 license = "BSD-3"
 authors = ["Yokodake <yokodake@cinnabar.fr>"]
-description = "ranger-like GUI filemanager"
-categories = ["filemanager"]
-edition = "2018"
+description = "custom druid widgets for the yukari filemanager"
 repository = "https://github.com/yokodake/yukari"
+edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 druid = { git = "https://github.com/linebender/druid.git" }
 
-[dependencies.yukari-lib]
-path = "lib"
-
-[dependencies.yukari-widgets]
-path = "widgets"
-
-[workspace]
-members = [ "lib"
-          , "widgets"
-          ]
+[lib]
+name = "yukari_widgets"
+path = "src/lib.rs"

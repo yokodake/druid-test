@@ -1,10 +1,11 @@
 use core::f64;
 use std::convert::TryInto;
-use super::Rational;
+
 // TODO: make panes resizeable.
 use druid::{Widget, WidgetPod};
 use druid::widget::Axis;
 
+use crate::Rational;
 
 pub struct SplitN<T>
   { children: Vec<WidgetPod<T, Box<dyn Widget<T>>>>
@@ -77,8 +78,8 @@ impl<T> SplitN<T> {
 
 #[cfg(test)]
 mod test_splitn {
-  use super::SplitN;
-  use super::Rational;
+  use crate::SplitN;
+  use crate::Rational;
   #[test]
   fn test_split_evenly() {
     assert_eq!( SplitN::<()>::split_evenly(1, Rational::ZERO)

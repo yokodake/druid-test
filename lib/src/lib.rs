@@ -1,0 +1,1 @@
+pub const world : &'static str = "world";

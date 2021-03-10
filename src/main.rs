@@ -1,21 +1,20 @@
 use druid::{
-    AppDelegate, AppLauncher, Code, Data, Event, 
+    AppDelegate, AppLauncher, Code, Data, Event,
     PlatformError, Size, Widget, WindowDesc,
 };
-
 use druid::widget::{Container, Flex, Label, Split};
 
-use widget::Footer;
+use yukari_widgets::Footer;
 
-fn build_ui() -> impl Widget<()> {
+fn build_ui<T: Data>() -> impl Widget<T> {
     Container::new (
-        Footer::new 
+        Footer::new
             ( Split::columns(Label::new("body1"), Label::new("body2"))
                 .draggable(true)
                 .solid_bar(true)
                 .min_size(150., 300.)
             , Flex::row()
-                .with_flex_child 
+                .with_flex_child
                     ( Label::new("footer asdkfjklasdjf aslf asfjaklsdjf a;sdj fasdjflkasj flas")
                     , 2.
                     )
@@ -36,24 +35,26 @@ impl<T> OptionExt<T> for Option<T> {
     }
 }
 fn main() -> Result<(), PlatformError> {
-    AppLauncher::with_window 
+    fn update_title(t: &String, _: &druid::Env) -> String {
+        t.clone()
+    }
+    AppLauncher::with_window
         ( WindowDesc::new(build_ui())
-        ( WindowDesc::new(build_ui)
-            .title("test")
+            .title(update_title)
             .with_min_size(Size::new(300., 300.))
         )
         .delegate(QExist {})
-        .launch(())
+        .launch("one".into())
 }
 
 struct QExist {}
 
-impl<T: Data> AppDelegate<T> for QExist {
+impl AppDelegate<String> for QExist {
     fn event ( &mut self
              , _ctx: &mut druid::DelegateCtx
              , _window_id: druid::WindowId
              , event: Event
-             , _data: &mut T
+             , data: &mut String
              , _env: &druid::Env
              ) -> Option<Event> {
         match &event {
@@ -61,6 +62,9 @@ impl<T: Data> AppDelegate<T> for QExist {
                 println!("{}", k.code);
                 if k.code == Code::KeyQ {
                     std::process::exit(1)
+                } else if k.code == Code::KeyW {
+                    *data = String::from("two");
+                    None
                 } else {
                     Some(event)
                 }
@@ -73,7 +77,7 @@ impl<T: Data> AppDelegate<T> for QExist {
                , _ctx: &mut druid::DelegateCtx
                , _target: druid::Target
                , _cmd: &druid::Command
-               , _data: &mut T
+               , _data: &mut String
                , _env: &druid::Env
                ) -> druid::Handled {
         druid::Handled::No
@@ -81,14 +85,14 @@ impl<T: Data> AppDelegate<T> for QExist {
 
     fn window_added ( &mut self
                     , _id: druid::WindowId
-                    , _data: &mut T
+                    , _data: &mut String
                     , _env: &druid::Env
                     , _ctx: &mut druid::DelegateCtx
                     ) {}
 
     fn window_removed ( &mut self
                       , _id: druid::WindowId
-                      , _data: &mut T
+                      , _data: &mut String
                       , _env: &druid::Env
                       , _ctx: &mut druid::DelegateCtx
                       ) {}
