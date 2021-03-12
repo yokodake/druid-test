@@ -1,1 +1,3 @@
-pub const world : &'static str = "world";
+
+pub mod state;
+pub use state::State;

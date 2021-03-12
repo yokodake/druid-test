@@ -25,7 +25,7 @@ impl<T> SplitN<T> {
     Self { split_axis
          , children: children.into_iter().map(|w| WidgetPod::new(w).boxed()).collect()
          , split_points_chosen: Self::split_evenly(s, Rational::ZERO)
-         , min_sizes: vec![0.; s] 
+         , min_sizes: vec![0.; s]
          , bar_size: 5.
          , solid: true
          , draggable: false
@@ -65,7 +65,7 @@ impl<T> SplitN<T> {
     }
 
     let inc : Rational = (Rational::ONE - offset) / Rational::try_from(len).unwrap();
-    std::iter::successors( Some((1, offset + inc)) 
+    std::iter::successors( Some((1, offset + inc))
                          , |(n, x)| {
         if *n < (len - 1) {
           Some((n+1, x + inc))
@@ -80,6 +80,7 @@ impl<T> SplitN<T> {
 mod test_splitn {
   use crate::SplitN;
   use crate::Rational;
+
   #[test]
   fn test_split_evenly() {
     assert_eq!( SplitN::<()>::split_evenly(1, Rational::ZERO)
@@ -108,7 +109,7 @@ mod test_splitn {
 }
 
 trait DoubleExt<T, U> {
-  fn fst(self) -> T; 
+  fn fst(self) -> T;
   fn snd(self) -> U;
 }
 trait TripleExt<T> {
