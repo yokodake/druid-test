@@ -1,18 +1,16 @@
-use druid::widget::{Container, Flex, Label, List, Split};
 use druid::{
     AppDelegate, AppLauncher, Code, Data, Event, PlatformError, Size, Widget,
-    WidgetExt, WindowDesc,
+    WidgetExt, WindowDesc, MenuDesc, LocalizedString, SysMods, platform_menus
 };
+use druid::widget::{Container, Flex, Label, List, Split};
 
 use yukari_lib::State;
 use yukari_widgets::Footer;
 
-// @FIXME fill entire body like footer
-fn build_header<T: Data>(body: impl Widget<T> + 'static) -> impl Widget<T> {
-    Flex::column()
-        .with_flex_child(Label::new("menu.."), 1.)
-        .with_flex_child(body, 1.)
-        .must_fill_main_axis(true)
+fn build_menu<T: Data>() -> MenuDesc<T> {
+    MenuDesc::empty()
+    .append(MenuDesc::new(LocalizedString::new("common-menu-file-menu"))
+            .append(platform_menus::win::file::close().hotkey(SysMods::None, "q")))
 }
 fn build_footer(body: impl Widget<State> + 'static) -> impl Widget<State> {
     Footer::new(
@@ -52,9 +50,9 @@ fn main() -> Result<(), PlatformError> {
     AppLauncher::with_window(
         WindowDesc::new(build_ui())
             .title(update_title)
+            .menu(build_menu())
             .with_min_size(Size::new(300., 300.)),
     )
-    .delegate(QExist {})
     .launch(State::cwd())
 }
 
